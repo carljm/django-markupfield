@@ -1,0 +1,3 @@
+Originally implemented by James Turk
+
+Modified by Carl J Meyer <carl@dirtcircle.com>

@@ -8,10 +8,3 @@ class Post(models.Model):
 
     def __unicode__(self):
         return self.title
-
-class Article(models.Model):
-    normal_field = MarkupField()
-    default_field = MarkupField(default_markup_type='markdown')
-    markdown_field = MarkupField(markup_type='markdown')
-
-
