@@ -1,18 +1,20 @@
 from django.conf import settings
 from django.db import models
 from django.utils.safestring import mark_safe
+from django.utils.functional import curry
 from django.core.exceptions import ImproperlyConfigured
 from markupfield import widgets
 
 _rendered_field_name = lambda name: '_%s_rendered' % name
 
-def _get_render_func(dotted_path):
+def _get_render_func(dotted_path, **kwargs):
     (module, func) = dotted_path.rsplit('.', 1)
-    return getattr(__import__(module, {}, {}, [func]), func)
+    func = getattr(__import__(module, {}, {}, [func]), func)
+    return curry(func, **kwargs)
 
 try:
-    render_func = _get_render_func(settings.MARKUP_FILTER[0])
-    render_func_kwargs = settings.MARKUP_FILTER[1]
+    render_func = _get_render_func(settings.MARKUP_FILTER[0],
+                                   **settings.MARKUP_FILTER[1])
 except ImportError, e:
     raise ImproperlyConfigured("Could not import MARKUP_FILTER %s: %s" %
                                (settings.MARKUP_FILTER, e))
@@ -73,7 +75,7 @@ class MarkupField(models.TextField):
 
     def pre_save(self, model_instance, add):
         value = super(MarkupField, self).pre_save(model_instance, add)
-        rendered = render_func(value.raw, **render_func_kwargs)
+        rendered = render_func(value.raw)
         setattr(model_instance, _rendered_field_name(self.attname), rendered)
         return value.raw
 
