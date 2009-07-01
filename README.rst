@@ -2,16 +2,19 @@
 django-markupfield
 ==================
 
-A custom fork of James Turk's implementation of a MarkupField for
-Django.  A MarkupField is a TextField that automatically renders as
-markup and caches its rendered value on the assumption that disk space
+A custom fork of James Turk's implementation of a MarkupField for Django.  A
+MarkupField is a TextField that automatically renders and stores both its
+raw and rendered values in the database, on the assumption that disk space
 is cheaper than CPU cycles in a web application.
 
 Installation
 ============
 
-You can obtain the latest release of django-markupfield by checking
-out the `latest source <http://github.com/jamesturk/django-markupfield>`_
+You can obtain this fork of django-markupfield by checking out the `latest
+source <http://github.com/carljm/django-markupfield>`_.  The original
+version is available on `PyPI
+<http://pypi.python.org/pypi/django-markupfield>`_ or `GitHub
+<http://github.com/jamesturk/django-markupfield>`_.
 
 To install a source distribution::
 
@@ -76,18 +79,17 @@ Accessing a MarkupField on a model
 
 When accessing an attribute of a model that was declared as a
 ``MarkupField`` a special ``Markup`` object is returned.  The
-``Markup`` object has three parameters:
+``Markup`` object has two attributes:
 
 ``raw``:
     The unrendered markup.
 ``rendered``:
     The rendered HTML version of ``raw`` (read-only).
 
-This object has a ``__unicode__`` method that calls
+This object also has a ``__unicode__`` method that calls
 ``django.utils.safestring.mark_safe`` on ``rendered``, allowing
-``MarkupField`` attributes to appear in templates as rendered HTML
-without any special template tag or having to access ``rendered``
-directly.
+``MarkupField`` attributes to appear in templates as rendered HTML without
+any special template tag or having to access ``rendered`` directly.
 
 Assuming the ``Article`` model above::
 
@@ -108,20 +110,15 @@ Assignment to ``a.body`` is equivalent to assignment to ``a.body.raw``.
 Todo
 ====
 
- * convert tests from doctest to unittest
- * add a test for __unicode__
+ * add a save_markup() method which accepts a rendering function and kwargs
 
 Origin
 ======
 
 The following paragraphs are James Turk's description of the original
-purpose of this project. My fork is intended to modify the project to
-meet the description put forward by James Bennett and others in the
-below-referenced django-dev thread.
-
-    For those coming here via django snippets or the tracker, my
-    original implementation is at
-    https://gist.github.com/67724/3b7497713897fa0021d58e46380e4d80626b6da2
+purpose of this project. My fork is intended to modify the project to meet
+the description put forward by James Bennett and others in `this django-dev
+thread <http://groups.google.com/group/django-developers/browse_thread/thread/c9124d565c17f972>`_.
 
     Jacob Kaplan-Moss commented on twitter that he'd possibly like to
     see a MarkupField in core and I filed a ticket on the Django trac
