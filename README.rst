@@ -54,32 +54,30 @@ like this::
 kwargs dictionary must be empty in this case.)
 
 ``django-markupfield`` provides one sample rendering function,
-``render_rest`` in the ``renderers`` module.
+``render_rest`` in the ``markupfield.renderers`` module.
 
 Usage
 =====
 
-Using MarkupField is easy, it can be used in any model definition::
+MarkupField is easy to add to any model definition::
 
     from django.db import models
     from markupfield.fields import MarkupField
 
     class Article(models.Model):
         title = models.CharField(max_length=100)
-        slug = models.SlugField(max_length=100)
         body = MarkupField()
 
-``MarkupField`` automatically creates an extra field
-``_body_rendered`` to store the rendered markup. This field doesn't
-need to be accessed directly, see below for how to access both raw and
-rendered field contents.
+``MarkupField`` automatically creates an extra non-editable field
+``_body_rendered`` to store the rendered markup. This field doesn't need to
+be accessed directly; see below.
 
 Accessing a MarkupField on a model
 ----------------------------------
 
 When accessing an attribute of a model that was declared as a
-``MarkupField`` a special ``Markup`` object is returned.  The
-``Markup`` object has two attributes:
+``MarkupField``, a ``Markup`` object is returned.  The ``Markup`` object has
+two attributes:
 
 ``raw``:
     The unrendered markup.
@@ -106,6 +104,25 @@ Assignment to ``a.body`` is equivalent to assignment to ``a.body.raw``.
 .. note::
     a.body.rendered is only updated when a.save() is called
 
+Editing a MarkupField in a form
+-------------------------------
+
+When editing a ``MarkupField`` model attribute in a ``ModelForm`` (i.e. in
+the Django admin), you'll generally want to edit the original markup and not
+the rendered HTML.  Because the ``Markup`` object returns rendered HTML from
+its __unicode__ method, it's necessary to use the ``MarkupTextarea`` widget
+from the ``markupfield.widgets`` module, which knows to return the raw
+markup instead.  There is also an ``AdminMarkupTextareaWidget`` for use in
+the admin.
+
+These widgets are normally used automatically, so no intervention is
+required (i.e. the ``formfield`` method of ``MarkupField`` returns a form
+field with the ``MarkupTextarea`` widget, and likewise the admin's default
+formfields dictionary is modified to use ``AdminMarkupTextareaWidget`` for
+``MarkupField``). But if you apply your own custom widget to the form field
+representing a ``MarkupField``, your widget must either inherit from
+``MarkupTextarea`` or its ``render`` method must convert its ``value``
+argument to ``value.raw``.
 
 Todo
 ====
