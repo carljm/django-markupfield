@@ -2,16 +2,19 @@
 django-markupfield
 ==================
 
-A custom fork of James Turk's implementation of a MarkupField for
-Django.  A MarkupField is a TextField that automatically renders as
-markup and caches its rendered value on the assumption that disk space
+A custom fork of James Turk's implementation of a MarkupField for Django.  A
+MarkupField is a TextField that automatically renders and stores both its
+raw and rendered values in the database, on the assumption that disk space
 is cheaper than CPU cycles in a web application.
 
 Installation
 ============
 
-You can obtain the latest release of django-markupfield by checking
-out the `latest source <http://github.com/jamesturk/django-markupfield>`_
+You can obtain this fork of django-markupfield by checking out the `latest
+source <http://github.com/carljm/django-markupfield>`_.  The original
+version is available on `PyPI
+<http://pypi.python.org/pypi/django-markupfield>`_ or `GitHub
+<http://github.com/jamesturk/django-markupfield>`_.
 
 To install a source distribution::
 
@@ -51,43 +54,40 @@ like this::
 kwargs dictionary must be empty in this case.)
 
 ``django-markupfield`` provides one sample rendering function,
-``render_rest`` in the ``renderers`` module.
+``render_rest`` in the ``markupfield.renderers`` module.
 
 Usage
 =====
 
-Using MarkupField is easy, it can be used in any model definition::
+MarkupField is easy to add to any model definition::
 
     from django.db import models
     from markupfield.fields import MarkupField
 
     class Article(models.Model):
         title = models.CharField(max_length=100)
-        slug = models.SlugField(max_length=100)
         body = MarkupField()
 
-``MarkupField`` automatically creates an extra field
-``_body_rendered`` to store the rendered markup. This field doesn't
-need to be accessed directly, see below for how to access both raw and
-rendered field contents.
+``MarkupField`` automatically creates an extra non-editable field
+``_body_rendered`` to store the rendered markup. This field doesn't need to
+be accessed directly; see below.
 
 Accessing a MarkupField on a model
 ----------------------------------
 
 When accessing an attribute of a model that was declared as a
-``MarkupField`` a special ``Markup`` object is returned.  The
-``Markup`` object has three parameters:
+``MarkupField``, a ``Markup`` object is returned.  The ``Markup`` object has
+two attributes:
 
 ``raw``:
     The unrendered markup.
 ``rendered``:
     The rendered HTML version of ``raw`` (read-only).
 
-This object has a ``__unicode__`` method that calls
+This object also has a ``__unicode__`` method that calls
 ``django.utils.safestring.mark_safe`` on ``rendered``, allowing
-``MarkupField`` attributes to appear in templates as rendered HTML
-without any special template tag or having to access ``rendered``
-directly.
+``MarkupField`` attributes to appear in templates as rendered HTML without
+any special template tag or having to access ``rendered`` directly.
 
 Assuming the ``Article`` model above::
 
@@ -104,24 +104,38 @@ Assignment to ``a.body`` is equivalent to assignment to ``a.body.raw``.
 .. note::
     a.body.rendered is only updated when a.save() is called
 
+Editing a MarkupField in a form
+-------------------------------
+
+When editing a ``MarkupField`` model attribute in a ``ModelForm`` (i.e. in
+the Django admin), you'll generally want to edit the original markup and not
+the rendered HTML.  Because the ``Markup`` object returns rendered HTML from
+its __unicode__ method, it's necessary to use the ``MarkupTextarea`` widget
+from the ``markupfield.widgets`` module, which knows to return the raw
+markup instead.  There is also an ``AdminMarkupTextareaWidget`` for use in
+the admin.
+
+These widgets are normally used automatically, so no intervention is
+required (i.e. the ``formfield`` method of ``MarkupField`` returns a form
+field with the ``MarkupTextarea`` widget, and likewise the admin's default
+formfields dictionary is modified to use ``AdminMarkupTextareaWidget`` for
+``MarkupField``). But if you apply your own custom widget to the form field
+representing a ``MarkupField``, your widget must either inherit from
+``MarkupTextarea`` or its ``render`` method must convert its ``value``
+argument to ``value.raw``.
 
 Todo
 ====
 
- * convert tests from doctest to unittest
- * add a test for __unicode__
+ * add a save_markup() method which accepts a rendering function and kwargs
 
 Origin
 ======
 
 The following paragraphs are James Turk's description of the original
-purpose of this project. My fork is intended to modify the project to
-meet the description put forward by James Bennett and others in the
-below-referenced django-dev thread.
-
-    For those coming here via django snippets or the tracker, my
-    original implementation is at
-    https://gist.github.com/67724/3b7497713897fa0021d58e46380e4d80626b6da2
+purpose of this project. My fork is intended to modify the project to meet
+the description put forward by James Bennett and others in `this django-dev
+thread <http://groups.google.com/group/django-developers/browse_thread/thread/c9124d565c17f972>`_.
 
     Jacob Kaplan-Moss commented on twitter that he'd possibly like to
     see a MarkupField in core and I filed a ticket on the Django trac
