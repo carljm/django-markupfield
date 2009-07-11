@@ -83,6 +83,12 @@ class MarkupField(models.TextField):
         value = self._get_val_from_obj(obj)
         return value.raw
 
+    def get_db_prep_value(self, value):
+        try:
+            return value.raw
+        except AttributeError:
+            return value
+
     def formfield(self, **kwargs):
         defaults = {'widget': widgets.MarkupTextarea}
         defaults.update(kwargs)
